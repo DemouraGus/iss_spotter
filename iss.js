@@ -24,24 +24,37 @@ const fetchCoordsbyIP = function(ip, callback) {
       return;
     }
     if (response.statusCode !== 200) {
-      const msg = `Status Code ${response.statusCode} when fetching coordinates. Response: ${body}`;
+      const msg = `Status Code ${response.statusCode} when fetching coords. Response: ${body}`;
       callback(Error(msg), null);
       return;
     }
-    if (response.statusCode === 200 && body.success === false) {
+    if (!body.success) {
       const msg = `Success status was ${body.success}. Server message says: ${body.message} when fetching for IP ${body.ip}`;
       callback(Error(msg), null);
       return;
     }
-    // if (!body.success) {
-    //   const message = `Success status was ${body.success}. Server message says: ${body.message} when fetching for IP ${body.ip}`;
-    //   callback(Error(message), null);
-    //   return;
-    // }
-    
-    const coordinates = { latitude: body.latitude, longitude: body.longitude };
-    callback(null, coordinates);
+    const coords = { latitude: body.latitude, longitude: body.longitude };
+    callback(null, coords);
   });
 };
 
-module.exports = { fetchMyIP, fetchCoordsbyIP };
+const fetchISSFlyOverTimes = function(coords, callback) {
+  needle.get(`https://iss-flyover.herokuapp.com/json/?lat=${coords.latitude}&lon=${coords.longitude}`, (error, response, body) => {
+    if (error) {
+      callback(error, null);
+      return;
+    }
+    if (response.statusCode !== 200) {
+      const msg = `Status Code ${response.statusCode} when fetching coords. Response: ${body}`;
+      callback(Error(msg), null);
+      return;
+    }
+    if (body.message !== "success") {
+      const msg = `Message was ${body.message} when fetching fly over times for coordinates lat: ${coords.latitude} lon: ${coords.longitude}.`;
+      callback(Error(msg), null);
+    }
+    callback(null, body.response);
+  });
+};
+
+module.exports = { fetchMyIP, fetchCoordsbyIP, fetchISSFlyOverTimes };
